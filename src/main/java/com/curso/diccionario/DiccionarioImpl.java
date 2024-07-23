@@ -1,6 +1,6 @@
 package com.curso.diccionario;
 
-import com.curso.PalabrasSugeridas;
+import com.curso.Utilidades;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -22,7 +22,7 @@ public class DiccionarioImpl implements Diccionario {
             return Files.readString(pathDelDiccionario).lines()   // Manzana=Fruta del manzano
                     .map( linea -> linea.split("=" ) ) // [Manzana, Fruta del manzano]
                     .map( array -> {
-                                        array[0] = PalabrasSugeridas.normalizarPalabra(array[0]);   // [manzana, Fruta del manzano]
+                                        array[0] = Utilidades.normalizarPalabra(array[0]);   // [manzana, Fruta del manzano]
                                         return array;
                     })
                     .collect(Collectors.toMap( array -> array[0], // Lo que quiero usar de clave en el Map
