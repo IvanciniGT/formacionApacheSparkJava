@@ -1,6 +1,6 @@
 package com.curso;
 
-public interface Utilidades {
+interface Utilidades {
     static String normalizarPalabra(String palabra) {
         return palabra.toLowerCase();
     }
