@@ -1,0 +1,8 @@
+import com.curso.diccionario.Diccionario;
+import com.curso.diccionario.DiccionarioImpl;
+
+module formacionApacheSparkDesdeJava {
+    exports com.curso;  // Aunque haya interfaces o clases publicas en otros paquetes de mi modulo (libreria: .jar) nadie podrá usarlas
+    provides Diccionario with DiccionarioImpl; // Aqui es donde decimos al ServiceLoader que implementación usar
+    uses Diccionario; // Y necesitamos que nos provean de una implementación de Diccionario
+}

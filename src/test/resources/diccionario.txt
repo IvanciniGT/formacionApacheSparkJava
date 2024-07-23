@@ -1,0 +1,5 @@
+manzana=Fruta del manzano
+banana=Fruta del banano
+manzano=Arbol que da manzanas
+albaricoque=Fruta del albaricoquero
+melón=Fruta del melonero|Persona con pocas luces
