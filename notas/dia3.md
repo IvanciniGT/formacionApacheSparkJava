@@ -143,3 +143,92 @@ A las 2:00 un día que lleguen 100k registros.. Con 2 me sobra
 Y si me llegan 200m de registros? Métele máquinas: 10 máquinas
 
 Y normalmente esas máquinas las contrato en un cloud... y pago por lo que uso!
+
+---
+COLECCION DE PALABRAS PROHIBIDAS
+caca culo pedo pis mierda
+
+COLECCION DE TWEETS                                                                                                     Stream<String> (tweets)
+Fiesta en la playa  #BeachParty#SunFun#CacaSun, bronceado extremo!
+#CaféEnLaMañana con un libro... #Relax pero mi café está frío :(
+Noche de estudio #StudyHard#NoSleep, ¿quién inventó los exámenes?
+En la playa con mis amigos #summerLove#goodVibes
+En navidades estudiando #mierdaDeNavidad#odioLaNavidad #odioElTurrón#odioMiVida. PD: No me gusta el turrón.
+En la bolera con los primos #mierdaGorda#bowling#goodvibes
+                    vvvv
+PASO 1: EXTRAER LOS HASHTAGS DE CADA TWEET:
+    replace("#", " #")                                  MAP                                                             Stream<String> (tweets) 
+    split( "[ .,()_!¿¡'=+-*/@;:<>-]" )                  MAP                                                             Stream<String[]> (palabras)
+        "Fiesta"
+        "en"
+        "la"
+        "playa"
+        "#BeachParty"
+        "#SunFun"
+        "#CacaSun"
+        "bronceado"
+        "extremo"
+    filter (los que empiecen por #)                     FILTER                                                           Stream<String[]> (hashtags)
+        ["#BeachParty", "#SunFun", "#CacaSun"]
+        ["#CaféEnLaMañana", "#Relax"]
+        ["#StudyHard", "#NoSleep"]
+        ["#summerLove", "#goodVibes"]
+        ["#mierdaDeNavidad", "#odioLaNavidad", "#odioElTurrón", "#odioMiVida"]
+                    vvvv
+    No estaría guay... conseguir aqui algo como:                                                                        Stream<String> (hashtag)
+        #BeachParty
+        #SunFun
+        #CacaSun
+        #CaféEnLaMañana
+        #Relax
+        #StudyHard
+        #NoSleep
+        #summerLove
+        #goodVibes
+    ESTO SE PUEDE HACER mediante la función FLATMAP (que es un map + flatten). En el caso de Streams (JAVA pelao')
+    A la función flatmap le debemos suministrar una función que reciba un dato de tipo String[] -> Stream<String>
+        ["#BeachParty", "#SunFun", "#CacaSun"]  -> Stream<String>
+        ["#CaféEnLaMañana", "#Relax"]           -> Otro Stream<String>
+        ["#StudyHard", "#NoSleep"]              -> Stream<String>
+        ["#summerLove", "#goodVibes"]           -> Stream<String>
+        ["#mierdaDeNavidad", "#odioLaNavidad", "#odioElTurrón", "#odioMiVida"] -> Stream<String>
+    Lo primero que hace flatmap es aplicar la función de transformación a cada elemento del stream original: map
+    Y espera la función flatmap, que esos objetos nuevos sean Streams... Y LOS CONSOLIDA (los aplana en un único Stream: flatten)
+                    vvvv
+    map (NORMALIZAR)
+    map (QUITAR EL CUADRADITO)
+                    vvvv
+    ¿Qué más? Filtrar los que contengan palabras prohibidas.... ¿COMO? Mediante un PREDICADO suministrado al FILTER
+
+        List<String> palabrasProhibidas = List.of("caca", "culo", "pedo", "pis", "mierda");
+        
+        (String hashtag) -> {
+            //if(palabrasProhibidas.contains(hashtag) // ME TEMO QUE ES TODO LO CONTRARIO !
+                // NO QUIERO VER SI EL HASTAG ESTA CONTENIDO EN LA LISTA DE PALABRAS PROHIBIDAS
+                // QUIERO VER SI EL HASHTAG CONTIENE ALGUNA DE LAS PALABRAS QUE ESTAN EN LA LISTA DE PALABRAS PROHIBIDAS
+   
+            // Programacion imperativa
+            boolean meVale = True;
+            for(String palabraProhibida : palabrasProhibidas) {
+                if (hashtag.contains(palabraProhibida)) {
+                    meVale = False;
+                    break;
+                }
+            }
+            return meVale;
+
+            // Podemos montar esto mismo con MAP-REDUCE
+            return palabrasProhibidas.stream().filter( palabraProhibida -> hashtag.contains(palabraProhibida) ).count() == 0;
+
+            return palabrasProhibidas.stream().noneMatch( hashtag::contains );
+        }
+
+        hashtag -> palabrasProhibidas.stream().noneMatch( hashtag::contains )
+
+RESULTADO: List<Hashtag> Daremos un mapa con 10 entradas
+BeachParty -> 10
+SunFun     -> 8
+goodVibes  -> 2
+~~cacaSun    -> 1~~
+~~mierdaDeNavidad -> 1~~
+---
