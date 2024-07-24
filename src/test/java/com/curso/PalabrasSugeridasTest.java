@@ -26,6 +26,7 @@ class PalabrasSugeridasTest {
     @ValueSource(strings = {"manana", "MANANA", "Manana"})
     void palabrasSugeridasSiNoExisteTest(String palabra) {
         List<String> palabrasRecibidas = palabrasSugeridas(palabra);
+        System.out.println(palabrasRecibidas);
         assertNotNull(palabrasRecibidas);
         assertEquals(3, palabrasRecibidas.size());
         assertTrue(palabrasRecibidas.contains("manzana"));
