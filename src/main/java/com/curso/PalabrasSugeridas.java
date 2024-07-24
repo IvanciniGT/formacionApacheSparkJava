@@ -29,7 +29,10 @@ public interface PalabrasSugeridas {
         if (diccionario.existePalabra(palabraNormalizada)) {
             sugerencias= List.of(palabraNormalizada);
         }else{
-            sugerencias = diccionario.palabrasExistentes().stream()                                                                                // Para cada palabra
+            sugerencias = diccionario.palabrasExistentes()
+                     //.stream() // Para cada palabra
+                     //.parallel() // Abre tantos hilos como CORES tengas disponibles en la máquina y tu verás como los usas.
+                     .parallelStream()
                      .filter(   palabra         -> Math.abs(palabra.length() - palabraNormalizada.length()) <= DISTANCIA_MAXIMA_ADMISIBLE        )  // Me quedo con las de longitud similar
                      .map(     palabra         -> new PalabraPuntuada(palabra, Utilidades.distanciaLevenshtein( palabra, palabraNormalizada ) ) )  // Calculo la distancia de Levenshtein
                      .filter(   palabraPuntuada -> palabraPuntuada.puntuacion <= DISTANCIA_MAXIMA_ADMISIBLE                                      )  // Me quedo con las que están a una distancia admisible
