@@ -321,3 +321,100 @@ Y ofrece 2 APIs medio paralelas... una pensada para invocarse desde Scala y otra
 scala           java
 RDD             JavaRDD
 SparkContext    JavaSparkContext
+
+
+
+--- 
+
+El dia 1 os comenté que esto esta pensado para LINUX
+Hadoop una cosa que nos ofrece es:
+- HDFS: Hadoop Distributed File System
+  El sistema de archivos de HADOOP usa los comandos habituales definidos en POSIX.
+
+
+---
+Qué eras UNIX? Un sistema operativo creado por los lab BELL de AT&T en los 70s.
+En los finales de los 1990/ principios de los 2000 dejaron de hacer UNIX como tal.
+Antes de que eso ocurrierá, llegó a haber más de 400 variantes de UNIX.... muchas de ellas incompatibles entre sí.
+Y hubo que poner orden... y salieron 2 estándares: POSIX y SUS, para detallar cómo debía evolucionar/ o crearse
+un SO según esta especificación (que se basaba en el código fuente de UNIX).
+
+Unix deja de fabricarse...
+Pero la especificación sigue...
+
+Qué es UNIX? Hoy en día nos referimos a UNIX como a esas 2 especificaciones: POSIX y SUS.
+Un sistema operativo UNIX® es un SO que cumple con la especificación POSIX y/o SUS.
+
+Muchos fabricantes de HW crean sus propios SO, cumpliendo con la especificación POSIX y/o SUS.:
+- IBM: AIX (UNIX®)
+- ORACLE: Solaris (UNIX®)
+- HP: HP-UX (UNIX®)
+- Apple: MacOS (UNIX®)
+
+Algunas personas / organizaciones crearon SO basados en esos estándares... pero no están certificados...
+no sabemos si cumplen o no con la especificación... ni nos importa lo más mínimno!
+- Universidad de Berkeley: BSD
+- GNU: No valieron... les falto una pieza clave: EL KERNEL.
+- Linus Torvalds: Linux (Un KERNEL supuestamente compatible con la especificación POSIX y/o SUS)
+  Y paso lo que tenía que pasar (hicieron MATCH): Linux + GNU = GNU/Linux (donde el 70% del código es de GNU) y el 30% de Linux.
+  Ese SO se distribuye mediante compendios llamados DISTRIBUCIONES:
+- RHEL
+- Fedora
+- Debian:
+    - Ubuntu
+- SUSE
+
+Otros, usaron el kernel de Linux, sin ninguna de las librerías de GNU:
+- Android (Kernel de Linux con librerías creadas por google)
+
+Dentro de POSIX se definen cosas como:
+- Los permisos de archivos / carpetas (rwxrwxrwx)
+- La estructura base de carpetas del sistema de archivos:
+    - bin/
+    - boot/
+    - dev/
+    - etc/
+      -...
+- Se definen algunos comandos básicos que debe tener un SO UNIX®:
+    - ls
+    - cp
+    - mv
+    - rm
+    - mkdir
+    - rmdir
+    - cat
+    - more
+    - less
+    - head
+    - tail
+    - grep
+    - find
+    - awk
+    - sed
+    - cut
+    - sort
+    - uniq
+    - wc
+    - tee
+    - tr
+    - ...
+
+En Linux tenemos esos comandos... en MacOS también... en Windows NO.
+Y Apache HAdoop los necesita para el HDFS...
+
+En windows, para hacer uso del HDFS (si no voy a hacer uso de él me la trae al peiro) necesito instalar un emulador de los comandos de UNIX® (WIN_UTILS)
+---
+
+En Java 1.9 se modulariza la máquina virtual de JAVA (JIGSAW). Es el cambio más gordo que ha habido en JAVA (en paralelo con el de Java 1.8)
+En versiones posteriores de la JVM... y dependiendo del fabricante de la JVM... hoy en día hay muchos:
+- OpenJDK
+- OracleJDK
+- IBMJDK
+- Corretto
+- Eclipse Temurin
+  ...
+
+En función de eso... hay módulos del propio API de JAVA que se han desabilitado por defecto... por considerarse INSEGUROS, como es el módulo sun.nio.ch
+
+En ciertas JVM necesitamos para usar en con Apache Spark habilitar ese módulo... y para ello necesitamos añadir una opción al comando de arranque de la JVM:
+--add-exports java.base/sun.nio.ch=ALL-UNNAMED

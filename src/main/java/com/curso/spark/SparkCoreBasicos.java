@@ -63,9 +63,7 @@ public class SparkCoreBasicos {
                 //.collect( Collectors.toList()                                                      ); // Los meto en una lista
                 // En el caso de spark, directamente pongo: .collect() ... y me entrega una List<T>
                 .collect();
-
         hashtags.forEach(System.out::println);
-
     }
 
 }
