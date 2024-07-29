@@ -3,6 +3,10 @@ package com.curso.spark;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.broadcast.Broadcast;
+import org.apache.spark.util.CollectionAccumulator;
+import org.apache.spark.util.LongAccumulator;
+import scala.Tuple2;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -45,11 +49,16 @@ public class SparkCoreBasicos {
     }
 
     public static void procesarTweets(JavaSparkContext sc) throws URISyntaxException, IOException {
+        LongAccumulator numeroDePalabrasEliminadas = sc.sc().longAccumulator("Número de palabras eliminadas");
+        CollectionAccumulator<String> palabrasEliminadas = sc.sc().collectionAccumulator("Palabras eliminadas");
+        Broadcast<List<String>> palabrasProhibidas = sc.broadcast(PALABRAS_PROHIBIDAS);
+
+
         String nombreFichero = "tweets.txt";
         Path rutaDelFichero = Paths.get(Hashtags.class.getClassLoader().getResource(nombreFichero).toURI());
         Stream<String> lineas = Files.readString(rutaDelFichero).lines();                                  // Para cada tweet
-        JavaRDD<String> lineasComoRDD = sc.parallelize( lineas.collect(Collectors.toList() ), 30 /*Aqui hay que pasar un JAVA collection... de los de siempre*/);
-        List<String> hashtags = lineasComoRDD
+        JavaRDD<String> lineasComoRDD = sc.parallelize( lineas.collect(Collectors.toList() ), 100/*Aqui hay que pasar un JAVA collection... de los de siempre*/);
+        List<Tuple2<String, Integer>> hashtags = lineasComoRDD
                 .map(    tweet -> tweet.replace("#", " #")                        )  // Separo los hashtags entre si
                 .map(    tweet -> tweet.split( "[ .,()_!¿¡'=+*/@;:<>-]" )                    )  // Separo las palabras
                 .flatMap( array -> Arrays.asList(array).iterator()                                       )  // Unifico el listado de palabras
@@ -59,11 +68,29 @@ public class SparkCoreBasicos {
                 .filter(  hashtag -> hashtag.startsWith("#")                                        )  // Me quedo con los hashtags
                 .map(    String::toLowerCase                                                       )  // Normalizo
                 .map(    hashtag -> hashtag.substring(1)                                 )  // Quito el cuadradito
-                .filter(  hashtag -> PALABRAS_PROHIBIDAS.stream().noneMatch( hashtag::contains )    )  // Me quedo con los que no contienen palabras prohibidas
+                .filter(  hashtag -> {
+                        boolean mantieneElHashtag = palabrasProhibidas.value()/*PALABRAS_PROHIBIDAS*/.stream().noneMatch( hashtag::contains );
+                        if(!mantieneElHashtag) {
+                            numeroDePalabrasEliminadas.add(1);
+                            palabrasEliminadas.add(hashtag);
+                            System.out.println("Contiene palabra prohibida: " + hashtag);
+                        }
+                        return mantieneElHashtag;
+                    }
+                )  // Me quedo con los que no contienen palabras prohibidas
                 //.collect( Collectors.toList()                                                      ); // Los meto en una lista
                 // En el caso de spark, directamente pongo: .collect() ... y me entrega una List<T>
+
+                .mapToPair( hashtag -> new Tuple2<>(hashtag, 1) ) // Añado a cada hashtag un 1
+                .reduceByKey( (a, b) -> a + b ) // Sumo los 1s de cada hashtag
+                .mapToPair( Tuple2::swap )
+                .sortByKey(false)
+                .mapToPair( Tuple2::swap )
+
                 .collect();
         hashtags.forEach(System.out::println);
+        System.out.println("Número de palabras eliminadas: " + numeroDePalabrasEliminadas.value());
+        System.out.println("Palabras eliminadas: " + palabrasEliminadas.value());
     }
 
 }
