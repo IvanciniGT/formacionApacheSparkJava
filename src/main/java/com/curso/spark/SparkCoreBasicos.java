@@ -53,7 +53,6 @@ public class SparkCoreBasicos {
         CollectionAccumulator<String> palabrasEliminadas = sc.sc().collectionAccumulator("Palabras eliminadas");
         Broadcast<List<String>> palabrasProhibidas = sc.broadcast(PALABRAS_PROHIBIDAS);
 
-
         String nombreFichero = "tweets.txt";
         Path rutaDelFichero = Paths.get(Hashtags.class.getClassLoader().getResource(nombreFichero).toURI());
         Stream<String> lineas = Files.readString(rutaDelFichero).lines();                                  // Para cada tweet
