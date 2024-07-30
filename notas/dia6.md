@@ -240,3 +240,4 @@ Me puede interesar, si voy a usar siempre la tabla de CPs para hacer este tipo d
 Y con las mismas, cuando sea que exporte la tabla personas de una BBDD me puede interesar exportarla preordenada por el campo de unión.
 
 
+ivan.osuna.ayuste@gmail.com
