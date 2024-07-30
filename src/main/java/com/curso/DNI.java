@@ -10,7 +10,7 @@ public class DNI {
     private int numero;
     private boolean valido;
 
-    private static final String PATRON_DNI = "^(([0-9]{1,8})|([0-9]{1,2}[.][0-9]{3}[.][0-9]{3})|([0-9]{1,3}[.][0-9]{3}))[ -]?[A-Za-z]$\n";
+    private static final String PATRON_DNI = "^(([0-9]{1,8})|([0-9]{1,2}[.][0-9]{3}[.][0-9]{3})|([0-9]{1,3}[.][0-9]{3}))[ -]?[A-Za-z]$";
     private static final String DIGITOS_CONTROL = "TRWAGMYFPDXBNJZSQVHLCKE";
 
     public DNI(String dniOriginal){

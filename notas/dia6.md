@@ -154,3 +154,89 @@ miDataset.select(col("columna1"), col("columna2"), col("columna1").plus(col("col
 JSON: JavaScript Object Notation
 
 let miVariable =  ???? <- Es JSON
+
+---
+
+# OJO A LOS JOINS
+
+Spark, aunque por momentos nos puede parecer que es una BBDD, no lo es en absoluto!
+Spark es una libraría de procesamiento Map-Reduce, que permite TRANSFORMAR DATOS.
+
+Gracias a la libraría SparkSQL, podemos usar una sintaxis muy parecida a SQL para trabajar con los datos.
+PERO SPARK NO ES UNA BBDD EN NINGUN CASO!
+
+Cuando una BBDD hace un join, para que ese join sea eficiente, necesitamos que los datos estén ordenados por la columna que se va a usar en el join.
+Por eso en las BBDD creamos INDICES en las columnas que se van a usar en los joins.
+
+Un índice es una copia PRE-ORDENADA de los datos.
+
+La cuestión es que en SPARK no existe el concepto de índice... y por tanto no podemos hacer esos joins tan eficientes,
+al menos usando la misma estrategia de joins que usa una BBDD relacional.
+
+En ocasiones, me interesa mucho más cargar los datos en una BBDD antes de enriquecerlos y posteriormente ALLI hacer el JOIN!
+Va a tardar INFINITAMENTE MENOS!
+Y entran las variantes de ETL:
+- ETLT:
+  - Extract de una BBDD o fichero
+  - Transformación previa de los datos
+  - Load en una BBDD
+  - Los enriquezco con un JOIN
+
+Los joins son un tema COMPLEJO DE NARICES !!!!!
+
+
+Imaginad que tengo una tabla A con 1M de registros y una tabla B con 1M de registros.
+Y quiero hacer un JOIN entre ambas tablas.... y quiero aprovechar la potencia de cálculo de mi cluster de Spark.
+Eso implica repartir los datos entre los trabajadores del cluster... y que cada trabajador haga el JOIN de su parte de los datos.
+
+Puedo particionar la tabla 1 del join, para mandar un trozo a cada nodo del cluster? SI
+Puedo particionar la tabla 2 del join, para mandar un trozo a cada nodo del cluster? NO: UPS !!!!!!
+    Por qué?
+        Depende del tipo de JOIN (a nivel conceptual), podré partirla o no... en muchos casos NO.
+
+Tengo la tabla clientes: 1M de registros
+Tengo la tabla CPS: 50k de registros
+Puedo partir la tabla clientes en 100 trozos... y mandar un trozo a cada nodo del cluster? De tamaño 10k
+Pero tengo garantías de qué CPs están en cada trozo? NO o SI
+Como podría tener esa garantía? ORDENANDO POR CODIGO POSTAL y haciendo el particionado en base a esta columna...
+pero... que tal se me va a dar ORDENAR 1M de registros? MAL
+Para una BBDD no hay problema... porque los datos lo va a tener PRE-ORDENADOS (mediante el uso del un índice)... pero eso en Spark no existe.
+La cuestión es más bien:
+- ME INTERESA GARANTIZAR ESO? Puede ser que si... puede ser que no.
+
+Mi tabla CPS: 50k datos... Ocupa mucho en RAM? NO... ocupa bastante poco.
+Si tengo la tabla en RAM, qué tipo de operación puedo usar (estrategia) para hacer el JOIN? Un lookup.
+Voy procesando cada fila de la tabla de clientes... saco su cp... y entro a la tabla de cps con ese cpo para recuperar sus datos.
+Es como si en java entrase por clave en un HashMap... que tal va eso de rápido? COMO UN TIRO !
+Eso lo puedo hacer debido a que la tabla CPS es pequeña y cabe en RAM.
+
+En un caso como ese me interesaría que la tabla CPs se mande completa a cada nodo del cluster...
+y que la query se resuelva (el join) mediante LOOKUP.... Y eso es lo que hace SPARK en esos casos.... 
+siempre y cuando SPARK considere que la tabla es pequeña y cabe en RAM.
+AUN ASI... esa tabla CPs se va a mandar a cada nodo trabajador cada vez que se envíe una partición de la tabla clientes a un nodo...
+Y eso será eficiente? NO... y lo podemos mejorar? BROADCAST 
+
+Al hacer un broadcast de una tabla, lo que hacemos es mandar la tabla a cada nodo del cluster... y que se quede en RAM.... y a su vez es una indicación
+a Spark de que esa tabla se va a usar en un JOIN mediante LOOKUP.
+
+PERO OJO!
+Eso solo será eficiente si la tabla 2 es pequeña y cabe en RAM.
+
+Si la tabla no cabe en RAM tengo un problema... se empezará a hacer swapping... y eso es un problema GRAVE DE RENDIMIENTO.
+Si la tabla no es pequeña, aunque entre en RAM, tengo un problema... la he de mandar a COMPLETA a todos los nodos... y eso es un problema de RED ( y cae el rendimiento)
+
+Si la tabla es grande, me interesa particionar por el campo de unión... y hacer el JOIN mediante estrategia de MERGE:
+
+|id | nombre | apellido | cp |                    | cp | municipio |
+|---|--------|----------|----|                    |----|-----------|
+| 1 | Federico | Pérez | 28001 |                  | 28001 | Madrid | 
+| 2 | Juan | Pérez | 28001 |                      | 28002 | Barcelona | 
+| 3 | María | Pérez | 28002 |                     | 28003 | Valencia | 
+| 4 | Federico | Pérez | 28002 |                 
+| 5 | Juan | Pérez | 28003 |                     
+| 6 | María | Pérez | 28003 |                   
+
+Me puede interesar, si voy a usar siempre la tabla de CPs para hacer este tipo de joins, tenerla pre-particionada por el campo de unión.
+Y con las mismas, cuando sea que exporte la tabla personas de una BBDD me puede interesar exportarla preordenada por el campo de unión.
+
+
