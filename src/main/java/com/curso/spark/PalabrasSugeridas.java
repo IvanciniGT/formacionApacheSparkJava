@@ -16,12 +16,14 @@ public class PalabrasSugeridas {
 
     private static final int MAX_PALABRAS_SUGERIDAS = 10;
     private static final int DISTANCIA_MAXIMA_ADMISIBLE = 2;
-    private static final String CLUSTER_URL = "local[2]";
+//    private static final String CLUSTER_URL = "local[2]";
+    //private static final String CLUSTER_URL = "spark://192.168.2.120:7077";
+
 
     public static void main(String[] args) throws InterruptedException, URISyntaxException, IOException {
         SparkConf conf = new SparkConf();
         conf.setAppName("Spark Core Basicos");
-        conf.setMaster(CLUSTER_URL); //ESTO TAMPOCO LO VAMOS A USAR!
+        //conf.setMaster(CLUSTER_URL); //ESTO TAMPOCO LO VAMOS A USAR!
         // conf.setJars() ESTO NO LO VAMOS A USAR NUNCA JAMAS
         JavaSparkContext sc = new JavaSparkContext(conf);
 

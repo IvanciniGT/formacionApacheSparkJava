@@ -20,7 +20,8 @@ import java.util.stream.Stream;
 
 public class SparkCoreBasicos {
 
-    private static final String CLUSTER_URL = "local[2]";
+    //private static final String CLUSTER_URL = "spark://192.168.2.120:7077";
+                                               //"local[2]";
     private static final List<String> PALABRAS_PROHIBIDAS = List.of("caca", "culo","pedo","pis", "mierda");
 
     // ^^^ AQUI habría que poner la URL de un cluster de Spark...
@@ -35,7 +36,7 @@ public class SparkCoreBasicos {
         // Paso 1.1: Configurar la conexión
         SparkConf conf = new SparkConf();
         conf.setAppName("Spark Core Basicos");
-        conf.setMaster(CLUSTER_URL);
+        //conf.setMaster(CLUSTER_URL);
         // Paso 1.2: Abrir la conexión
         JavaSparkContext sc = new JavaSparkContext(conf);
         // AQUI Cargaríamos el conjunto de datos....
@@ -53,8 +54,9 @@ public class SparkCoreBasicos {
         CollectionAccumulator<String> palabrasEliminadas = sc.sc().collectionAccumulator("Palabras eliminadas");
         Broadcast<List<String>> palabrasProhibidas = sc.broadcast(PALABRAS_PROHIBIDAS);
 
-        String nombreFichero = "tweets.txt";
-        Path rutaDelFichero = Paths.get(Hashtags.class.getClassLoader().getResource(nombreFichero).toURI());
+        //String nombreFichero = "tweets.txt";
+        //Path rutaDelFichero = Paths.get(Hashtags.class.getClassLoader().getResource(nombreFichero).toURI());
+        Path rutaDelFichero = Paths.get("src/main/resources/tweets.txt");
         Stream<String> lineas = Files.readString(rutaDelFichero).lines();                                  // Para cada tweet
         JavaRDD<String> lineasComoRDD = sc.parallelize( lineas.collect(Collectors.toList() ), 100/*Aqui hay que pasar un JAVA collection... de los de siempre*/);
         List<Tuple2<String, Integer>> hashtags = lineasComoRDD
@@ -77,14 +79,15 @@ public class SparkCoreBasicos {
                         return mantieneElHashtag;
                     }
                 )  // Me quedo con los que no contienen palabras prohibidas
+                .repartition(1)
                 //.collect( Collectors.toList()                                                      ); // Los meto en una lista
                 // En el caso de spark, directamente pongo: .collect() ... y me entrega una List<T>
 
                 .mapToPair( hashtag -> new Tuple2<>(hashtag, 1) ) // Añado a cada hashtag un 1
                 .reduceByKey( (a, b) -> a + b ) // Sumo los 1s de cada hashtag
-                .mapToPair( Tuple2::swap )
+                .mapToPair( (tupla) -> new Tuple2<>(tupla._2, tupla._1) )
                 .sortByKey(false)
-                .mapToPair( Tuple2::swap )
+                .mapToPair( (tupla) -> new Tuple2<>(tupla._2, tupla._1) )
 
                 .collect();
         hashtags.forEach(System.out::println);

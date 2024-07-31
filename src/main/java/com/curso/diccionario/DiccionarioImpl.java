@@ -17,7 +17,8 @@ public class DiccionarioImpl implements Diccionario {
     private static Map<String, List<String>> cargarPalabras() {
         // Con Java 11, la lectura se hace guay
         try {
-            Path pathDelDiccionario = Path.of(DiccionarioImpl.class.getClassLoader().getResource("diccionario.txt").toURI());
+            //Path pathDelDiccionario = Path.of(DiccionarioImpl.class.getClassLoader().getResource("diccionario.txt").toURI());
+            Path pathDelDiccionario = Path.of("src/main/resources/diccionario.txt");
             return Files.readString(pathDelDiccionario).lines()   // Manzana=Fruta del manzano
                     .map( linea -> linea.split("=" ) ) // [Manzana, Fruta del manzano]
                     .map( array -> {
@@ -36,9 +37,9 @@ public class DiccionarioImpl implements Diccionario {
                                                }
                             )
                     ); // Lo que quiero usar de valor en el Map
-        }catch (URISyntaxException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
+        //}catch (URISyntaxException e) {
+        //    e.printStackTrace();
+        //    throw new RuntimeException(e);
             // Notificarla de alguna forma!
         } catch (IOException e) {
             throw new RuntimeException(e);

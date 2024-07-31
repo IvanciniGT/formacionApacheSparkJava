@@ -15,7 +15,7 @@ public class IntroSQL {
         // Abrir una conexión al cluster de Spark
         SparkSession conexion = SparkSession.builder()
                 .appName("IntroSQL")
-                .master("local[2]")
+                //.master("local[2]")
                 .getOrCreate();
 
         // Generar un dataset
@@ -94,7 +94,6 @@ public class IntroSQL {
         Dataset<Row> resultado = datos.join(broadcast(cps),"cp"); // Solo porque las 2 tablas tienen una columna con el mismo nombre
         // Si no fuese así, tendríamos que hacer un join con la sintaxis completa:
 
-
         datos = datos.repartitionByRange(10, col("cp"));
         cps = cps.repartitionByRange(5, col("cp"));
 
@@ -108,10 +107,17 @@ public class IntroSQL {
         resultado.write()
                 .mode("overwrite")
                 .json("personas_con_cp.json");
-        resultado.write()
+        resultado
+                .repartition(2)
+                .write()
                 .option("header", "true")
                 .mode("overwrite")
                 .csv("personas_con_cp.csv");
+        resultado
+                .repartition(2)
+                .write()
+                .mode("overwrite")
+                .parquet("personas_con_cp.parquet");
 
 
         // Cerrar la conexión al cluster de Spark
